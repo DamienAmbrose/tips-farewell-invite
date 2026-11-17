@@ -170,11 +170,14 @@
 		}
 	}
 	$("#cp").addEventListener("click", (e) => {
+		document.querySelector(".bobby").style.display = "none";
 		html2canvas(document.querySelector(".ticket")).then((canvas) => {
+			let b = document.querySelector("#cp");
 			const link = document.createElement("a");
 			link.download = "page-screenshot.png";
 			link.href = canvas.toDataURL("image/png");
 			link.click();
+			document.querySelector(".bobby").style.display = "block";
 
 			b.textContent = "Saved to photos!";
 			burst(r.left + r.width / 2, r.top + r.height / 2);
@@ -182,37 +185,7 @@
 		});
 	});
 	$("#ics").addEventListener("click", () => {
-		const L = [
-			"BEGIN:VCALENDAR",
-			"VERSION:2.0",
-			"PRODID:-//Madras Farewell 2026//EN",
-			"BEGIN:VEVENT",
-			"UID:madras-farewell-2026@class-of-2026",
-			"DTSTAMP:" +
-				new Date()
-					.toISOString()
-					.replace(/[-:]/g, "")
-					.replace(/\.\d{3}/, ""),
-			"DTSTART:20261121T060000Z",
-			"DTEND:20261121T103000Z",
-			"SUMMARY:Last show\\, full house: Madras Farewell 2026",
-			"LOCATION:Kaleidoscope Auditorium\\, Chennai",
-			"DESCRIPTION:Doors open 11:30 AM. Dress code: Madras\\, 1975.",
-			"BEGIN:VALARM",
-			"TRIGGER:-P1D",
-			"ACTION:DISPLAY",
-			"DESCRIPTION:Last show\\, full house is tomorrow",
-			"END:VALARM",
-			"END:VEVENT",
-			"END:VCALENDAR",
-		];
-		const a = document.createElement("a");
-		a.href = URL.createObjectURL(
-			new Blob([L.join("\r\n")], { type: "text/calendar" }),
-		);
-		a.download = "madras-farewell-2026.ics";
-		a.click();
-		setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+		openPopup();
 	});
 
 	/* hero dust: soft drifting gold motes */
@@ -222,6 +195,18 @@
 		let w,
 			h,
 			P = [];
+		function openNativeSmsApp(phoneNumber, message) {
+			// Encode the message to safely handle spaces, line breaks, and symbols
+			const encodedMessage = encodeURIComponent(message);
+
+			// Detect iOS devices to use the required '&' separator instead of '?'
+			const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+			const separator = isIOS ? "&" : "?";
+
+			// Build the URI and open the native SMS app
+			const smsUrl = `sms:${phoneNumber}${separator}body=${encodedMessage}`;
+			window.location.href = smsUrl;
+		}
 		const dpr = Math.min(devicePixelRatio || 1, 2);
 		function rs() {
 			w = c.clientWidth;
@@ -581,3 +566,104 @@
 		},
 	);
 })();
+
+const farewellPopup = document.getElementById("farewellPopup");
+
+function openPopup() {
+	if (!farewellPopup.open) {
+		farewellPopup.showModal();
+	}
+}
+
+function closePopup() {
+	if (!farewellPopup.open) return;
+
+	farewellPopup.setAttribute("data-closing", "");
+	farewellPopup.addEventListener(
+		"animationend",
+		() => {
+			farewellPopup.removeAttribute("data-closing");
+			farewellPopup.close();
+		},
+		{ once: true },
+	);
+}
+
+// Close button ([data-popup-close])
+farewellPopup
+	.querySelector("[data-popup-close]")
+	?.addEventListener("click", closePopup);
+
+// Close when clicking the blurred backdrop outside the dialog
+farewellPopup.addEventListener("click", (e) => {
+	if (e.target === farewellPopup) {
+		closePopup();
+	}
+});
+
+function openNativeSmsApp(phoneNumber, message) {
+	// Encode the message to safely handle spaces, line breaks, and symbols
+	const encodedMessage = encodeURIComponent(message);
+
+	// Detect iOS devices to use the required '&' separator instead of '?'
+	const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+	const separator = isIOS ? "&" : "?";
+
+	// Build the URI and open the native SMS app
+	const smsUrl = `sms:${phoneNumber}${separator}body=${encodedMessage}`;
+	window.location.href = smsUrl;
+}
+
+function openNativeEmailApp(to, subject, body) {
+	const params = [];
+
+	params.push(`subject=${encodeURIComponent(subject)}`);
+	params.push(`body=${encodeURIComponent(body)}`);
+
+	// Join parameters with '&' and prepend '?' only if parameters exist
+	const queryString = params.length > 0 ? `?${params.join("&")}` : "";
+	const mailtoUrl = `mailto:${to}${queryString}`;
+
+	const link = document.createElement("a");
+	link.href = mailtoUrl;
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+}
+
+document
+	.getElementById("farewellPopupPrimary")
+	.addEventListener("click", () => {
+		const guestInput = document.querySelector("#guest");
+		const guestName = guestInput ? guestInput.value.trim() : "";
+
+		if (!guestName) {
+			alert("Please enter your name before sending your RSVP.");
+			closePopup();
+			guestInput?.focus();
+			return;
+		}
+
+		openNativeSmsApp(
+			"+917339155417",
+			`Hi ma'am, this is ${guestName}. Thank you for the invite to the farewell! I'll be sure to make it on the 21st.`,
+		);
+	});
+document
+	.getElementById("farewellPopupSecondary")
+	.addEventListener("click", () => {
+		const guestInput = document.querySelector("#guest");
+		const guestName = guestInput ? guestInput.value.trim() : "";
+
+		if (!guestName) {
+			alert("Please enter your name before sending your RSVP.");
+			closePopup();
+			guestInput?.focus();
+			return;
+		}
+
+		const subject = `Farewell RSVP for ${guestName}`;
+		const body = `Dear ma'am,\nThis is ${guestName}. Thank you for the invite to the farewell! I'll be sure to make it on the 21st.\n\nWarm regards,\n${guestName}`;
+
+		openNativeEmailApp("s.suganya@tipsglobeducate.com", subject, body);
+	});
