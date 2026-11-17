@@ -1799,6 +1799,9 @@ footer .plaid {
 	transform: translate(-280%, 210%) rotate(-15deg);
 }
 @media (max-width: 1030px) {
+	.stamp {
+		display: none;
+	}
 	#dress {
 		flex-direction: column;
 		align-items: center;
