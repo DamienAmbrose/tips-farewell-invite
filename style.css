@@ -1831,7 +1831,11 @@ margin-bottom: 30vw;
 	}
 	.looks {
 		grid-template-columns: 1fr;
+		width: 70%;
 		margin-right: 0;
+	}
+	.card-group {
+		margin-bottom: 60vw;
 	}
 	.look:nth-child(n) {
 		margin-top: 0;
